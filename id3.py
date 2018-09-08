@@ -271,6 +271,20 @@ def test_data (test_obj, root):
   error_test = ((total_len - match_count)/total_len) * 100
   print ('Error in test data = {}%'.format (error_test))
 
+def depth_tree (root):
+  if root.label != "":
+    return 0
+
+  children_depth = np.zeros((len (root.children), 1))
+  x = 0
+
+  for value, n in root.children:
+    children_depth[x] = depth_tree (n) + 1
+    x += 1
+
+  max_depth = int (max (children_depth))
+  return max_depth
+
 # Main Function
 def main ():
   data_obj = Data (fpath = "train.csv")
@@ -278,6 +292,9 @@ def main ():
   root = create_node (data_obj, data_obj.header)
 
   print_tree (root, 0)
+
+  height = depth_tree (root)
+  print ('Height of the training tree = {}'.format (height))
 
   test_obj = Data (fpath = "test.csv")
 
