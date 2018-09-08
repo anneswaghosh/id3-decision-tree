@@ -266,7 +266,10 @@ def test_data (test_obj, root):
   print ('Match found = {} out of {} entries.'.format (match_count, total_len))
 
   accuracy = (match_count/total_len) * 100
-  print ('Accuracy in train data = {}%'.format (accuracy))
+  print ('Accuracy in test data = {}%'.format (accuracy))
+
+  error_test = ((total_len - match_count)/total_len) * 100
+  print ('Error in test data = {}%'.format (error_test))
 
 # Main Function
 def main ():
