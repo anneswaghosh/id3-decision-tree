@@ -313,5 +313,18 @@ def main ():
 
   test_data (test_obj, root, True)
 
+#Cross-Validation
+  for x in range (1, 6):
+    cross_val = []
+    for y in range (1, 6):
+      if (x != y):
+        if not cross_val:
+          cross_val = [np.loadtxt ('fold'+str(y)+'.csv', delimiter=',', dtype = str)]
+        else:
+          cross_val.append (np.loadtxt ('fold'+str(y)+'.csv', delimiter=',', dtype = str, skiprows = 1))
+
+    final_cross_val = np.concatenate (cross_val)
+    cross_obj = Data (data = final_cross_val)
+
 if __name__=="__main__":
   main()
