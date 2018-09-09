@@ -196,7 +196,7 @@ def create_node (data_obj, header):
 
   for col in range(1, train_data.shape[1]):
     info_gain[col - 1] = info_gain_cal (data_obj, col)
-    print ('Information gain for {} = {}'.format (header[col], info_gain[col - 1]))
+    #print ('Information gain for {} = {}'.format (header[col], info_gain[col - 1]))
 
   # Since the first column is label
   root = np.argmax (info_gain) + 1
@@ -280,6 +280,8 @@ def test_data (test_obj, root, flag):
   else:
     print ('Error in test data = {}%'.format (error_test))
 
+  return accuracy
+
 def depth_tree (root):
   if root.label != "":
     return 0
@@ -296,7 +298,7 @@ def depth_tree (root):
 
 # Main Function
 def main ():
-  data_obj = Data (fpath = "Mango_train.csv")
+  data_obj = Data (fpath = "train.csv")
 
   root = create_node (data_obj, data_obj.header)
 
@@ -305,15 +307,18 @@ def main ():
   height = depth_tree (root)
   print ('Height of the training tree = {}'.format (height))
 
-  test_obj = Data (fpath = "Mango_train.csv")
+  test_obj = Data (fpath = "train.csv")
 
   test_data (test_obj, root, False)
 
-  test_obj = Data (fpath = "Mango_test.csv")
+  test_obj = Data (fpath = "test.csv")
 
   test_data (test_obj, root, True)
 
 #Cross-Validation
+  #4 is made because there are 5 accuracies (5-fold)
+  accuracy = np.zeros((5, 1))
+
   for x in range (1, 6):
     cross_val = []
     for y in range (1, 6):
@@ -325,6 +330,15 @@ def main ():
 
     final_cross_val = np.concatenate (cross_val)
     cross_obj = Data (data = final_cross_val)
+    root = create_node (cross_obj, cross_obj.header)
+
+    cross_test_obj = Data (fpath = 'fold'+str(x)+'.csv')
+
+    print ('\nTested with fold{} data'.format (x))
+    accuracy[x - 1] = test_data (cross_test_obj, root, True)
+
+  accuracy_mean = np.mean (accuracy)
+  print ('\nAverage accuracy for 5-fold data = {}'.format (accuracy_mean))
 
 if __name__=="__main__":
   main()
