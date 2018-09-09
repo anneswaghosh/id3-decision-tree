@@ -149,7 +149,7 @@ def compute_entropy (label):
   for y in range (entropy_count.shape[0]):
     entropy += -1 * entropy_count[y] * math.log (entropy_count[y], 2)   
 
-  return entropy
+  return entropy 
 
 def compute_subtable (data_obj, col):
   train_data = data_obj.raw_data
@@ -196,6 +196,7 @@ def create_node (data_obj, header):
 
   for col in range(1, train_data.shape[1]):
     info_gain[col - 1] = info_gain_cal (data_obj, col)
+    print ('Information gain for {} = {}'.format (header[col], info_gain[col - 1]))
 
   # Since the first column is label
   root = np.argmax (info_gain) + 1
@@ -252,7 +253,7 @@ def match_label (test_row, header_dict, header, root):
       ret = match_label (test_row, header_dict, header, n)
       return ret
 
-def test_data (test_obj, root):
+def test_data (test_obj, root, flag):
   total_len = test_obj.__len__  ()
   match_count = 0
 
@@ -266,10 +267,18 @@ def test_data (test_obj, root):
   print ('Match found = {} out of {} entries.'.format (match_count, total_len))
 
   accuracy = (match_count/total_len) * 100
-  print ('Accuracy in test data = {}%'.format (accuracy))
+
+  if flag is False:
+    print ('Accuracy in train data = {}%'.format (accuracy))
+  else:
+    print ('Accuracy in test data = {}%'.format (accuracy))
 
   error_test = ((total_len - match_count)/total_len) * 100
-  print ('Error in test data = {}%'.format (error_test))
+
+  if flag is False:
+    print ('Error in train data = {}%'.format (error_test))
+  else:
+    print ('Error in test data = {}%'.format (error_test))
 
 def depth_tree (root):
   if root.label != "":
@@ -287,7 +296,7 @@ def depth_tree (root):
 
 # Main Function
 def main ():
-  data_obj = Data (fpath = "train.csv")
+  data_obj = Data (fpath = "Mango_train.csv")
 
   root = create_node (data_obj, data_obj.header)
 
@@ -296,9 +305,13 @@ def main ():
   height = depth_tree (root)
   print ('Height of the training tree = {}'.format (height))
 
-  test_obj = Data (fpath = "test.csv")
+  test_obj = Data (fpath = "Mango_train.csv")
 
-  test_data (test_obj, root)
+  test_data (test_obj, root, False)
+
+  test_obj = Data (fpath = "Mango_test.csv")
+
+  test_data (test_obj, root, True)
 
 if __name__=="__main__":
   main()
