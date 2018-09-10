@@ -184,13 +184,30 @@ def info_gain_cal (data_obj, col):
   return info_gain
 
 # Function to create nodes of the decision tree
-def create_node (data_obj, header):
+def create_node (data_obj, header, k_fold_depth, curr_depth):
   train_data = data_obj.raw_data
+
+  if k_fold_depth == curr_depth:
+    max_freq_dict = {}
+
+    for z in range (np.unique(train_data[:, 0]).shape[0]):
+      max_freq_dict [np.unique (train_data[:, 0])[z]] = 0
+
+    for x in range (train_data[:, 0].shape[0]):
+      max_freq_dict[train_data[:, 0][x]] += 1
+
+    view_frq_dict = {v: k for k, v in max_freq_dict.items()}
+
+    max_freq = max (view_frq_dict)
+    node = Node ("")
+    node.label = view_frq_dict[max_freq]
+    return node
 
   if (np.unique (train_data[:, 0])).shape[0] == 1:
     node = Node ("")
     node.label = np.unique (train_data[:, 0])[0]  
     return node
+
 
   info_gain = np.zeros((train_data.shape[1] - 1, 1))
 
@@ -213,8 +230,10 @@ def create_node (data_obj, header):
     dictionary[pos_val_col[x]].index_column_dict = dict(enumerate(header))
     dictionary[pos_val_col[x]].column_index_dict = {v: k for k, v in dictionary[pos_val_col[x]].index_column_dict.items()}
 
+  curr_depth += 1
+
   for x in range (pos_val_col.shape[0]):
-    child_node = create_node (dictionary[pos_val_col[x]], header)
+    child_node = create_node (dictionary[pos_val_col[x]], header, k_fold_depth, curr_depth)
     node.children.append ((pos_val_col[x], child_node))
 
   return node
@@ -276,9 +295,9 @@ def test_data (test_obj, root, flag):
   error_test = ((total_len - match_count)/total_len) * 100
 
   if flag is False:
-    print ('Error in train data = {}%'.format (error_test))
+    print ('Error in train data = {}% \n'.format (error_test))
   else:
-    print ('Error in test data = {}%'.format (error_test))
+    print ('Error in test data = {}% \n'.format (error_test))
 
   return accuracy
 
@@ -300,7 +319,7 @@ def depth_tree (root):
 def main ():
   data_obj = Data (fpath = "train.csv")
 
-  root = create_node (data_obj, data_obj.header)
+  root = create_node (data_obj, data_obj.header, 1000, 0)
 
   print_tree (root, 0)
 
@@ -316,29 +335,36 @@ def main ():
   test_data (test_obj, root, True)
 
 #Cross-Validation
+  fold_val = [1, 2, 3, 4, 5, 10, 15]
+
   #4 is made because there are 5 accuracies (5-fold)
-  accuracy = np.zeros((5, 1))
+  for k_fold in fold_val:
+    accuracy = np.zeros((5, 1))
 
-  for x in range (1, 6):
-    cross_val = []
-    for y in range (1, 6):
-      if (x != y):
-        if not cross_val:
-          cross_val = [np.loadtxt ('fold'+str(y)+'.csv', delimiter=',', dtype = str)]
-        else:
-          cross_val.append (np.loadtxt ('fold'+str(y)+'.csv', delimiter=',', dtype = str, skiprows = 1))
+    print ('Testing with depth {}:'.format (k_fold))
+    print ('----------------------\n')
 
-    final_cross_val = np.concatenate (cross_val)
-    cross_obj = Data (data = final_cross_val)
-    root = create_node (cross_obj, cross_obj.header)
+    for x in range (1, 6):
+      cross_val = []
+      for y in range (1, 6):
+        if (x != y):
+          if not cross_val:
+            cross_val = [np.loadtxt ('fold'+str(y)+'.csv', delimiter=',', dtype = str)]
+          else:
+            cross_val.append (np.loadtxt ('fold'+str(y)+'.csv', delimiter=',', dtype = str, skiprows = 1))
 
-    cross_test_obj = Data (fpath = 'fold'+str(x)+'.csv')
+      final_cross_val = np.concatenate (cross_val)
+      cross_obj = Data (data = final_cross_val)
+      root = create_node (cross_obj, cross_obj.header, k_fold, 0)
 
-    print ('\nTested with fold{} data'.format (x))
-    accuracy[x - 1] = test_data (cross_test_obj, root, True)
+      cross_test_obj = Data (fpath = 'fold'+str(x)+'.csv')
 
-  accuracy_mean = np.mean (accuracy)
-  print ('\nAverage accuracy for 5-fold data = {}'.format (accuracy_mean))
+      print ('Tested with fold{} data ==>'.format (x))
+      accuracy[x - 1] = test_data (cross_test_obj, root, True)
+
+    accuracy_mean = np.mean (accuracy)
+    print ('\nAverage accuracy for 5-fold data for depth {} = {}'.format (k_fold, accuracy_mean))
+    print ('Standard deviation = {}\n'.format (np.std (accuracy)))
 
 if __name__=="__main__":
   main()
