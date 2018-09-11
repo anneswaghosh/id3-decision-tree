@@ -336,6 +336,7 @@ def main ():
 
 #Cross-Validation
   fold_val = [1, 2, 3, 4, 5, 10, 15]
+  root_dict = {}
 
   #4 is made because there are 5 accuracies (5-fold)
   for k_fold in fold_val:
@@ -355,16 +356,21 @@ def main ():
 
       final_cross_val = np.concatenate (cross_val)
       cross_obj = Data (data = final_cross_val)
-      root = create_node (cross_obj, cross_obj.header, k_fold, 0)
+      root_dict[k_fold] = create_node (cross_obj, cross_obj.header, k_fold, 0)
 
       cross_test_obj = Data (fpath = 'fold'+str(x)+'.csv')
 
       print ('Tested with fold{} data ==>'.format (x))
-      accuracy[x - 1] = test_data (cross_test_obj, root, True)
+      accuracy[x - 1] = test_data (cross_test_obj, root_dict[k_fold], True)
 
     accuracy_mean = np.mean (accuracy)
     print ('\nAverage accuracy for 5-fold data for depth {} = {}'.format (k_fold, accuracy_mean))
     print ('Standard deviation = {}\n'.format (np.std (accuracy)))
+
+  root = create_node (data_obj, data_obj.header, 5, 0)
+  test_obj = Data (fpath = "test.csv")
+
+  test_data (test_obj, root, True)
 
 if __name__=="__main__":
   main()
